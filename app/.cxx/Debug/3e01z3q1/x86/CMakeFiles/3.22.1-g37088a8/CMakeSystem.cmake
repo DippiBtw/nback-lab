@@ -1,9 +1,9 @@
-set(CMAKE_HOST_SYSTEM "Darwin-22.3.0")
-set(CMAKE_HOST_SYSTEM_NAME "Darwin")
-set(CMAKE_HOST_SYSTEM_VERSION "22.3.0")
-set(CMAKE_HOST_SYSTEM_PROCESSOR "arm64")
+set(CMAKE_HOST_SYSTEM "Linux-6.11.3-arch1-1")
+set(CMAKE_HOST_SYSTEM_NAME "Linux")
+set(CMAKE_HOST_SYSTEM_VERSION "6.11.3-arch1-1")
+set(CMAKE_HOST_SYSTEM_PROCESSOR "x86_64")
 
-include("/Users/yeetivity/Library/Android/sdk/ndk/25.1.8937393/build/cmake/android.toolchain.cmake")
+include("/home/riff/Android/Sdk/ndk/25.1.8937393/build/cmake/android.toolchain.cmake")
 
 set(CMAKE_SYSTEM "Android-1")
 set(CMAKE_SYSTEM_NAME "Android")
