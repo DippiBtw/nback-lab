@@ -1,0 +1,35 @@
+{
+  "buildFiles": [
+    "/home/riff/repos/nback-lab/app/src/main/cpp/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/home/riff/Android/Sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/home/riff/repos/nback-lab/app/.cxx/Debug/3e01z3q1/x86_64",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/home/riff/Android/Sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/home/riff/repos/nback-lab/app/.cxx/Debug/3e01z3q1/x86_64",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "nback_cimpl::@6890427a1f51a3e7e1df": {
+      "artifactName": "nback_cimpl",
+      "abi": "x86_64",
+      "output": "/home/riff/repos/nback-lab/app/build/intermediates/cxx/Debug/3e01z3q1/obj/x86_64/libnback_cimpl.so",
+      "runtimeFiles": []
+    },
+    "JniBridge::@6890427a1f51a3e7e1df": {
+      "artifactName": "JniBridge",
+      "abi": "x86_64",
+      "output": "/home/riff/repos/nback-lab/app/build/intermediates/cxx/Debug/3e01z3q1/obj/x86_64/libJniBridge.so",
+      "runtimeFiles": [
+        "/home/riff/repos/nback-lab/app/build/intermediates/cxx/Debug/3e01z3q1/obj/x86_64/libnback_cimpl.so"
+      ]
+    }
+  }
+}

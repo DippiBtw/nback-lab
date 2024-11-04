@@ -1,0 +1,5 @@
+# ninja log v5
+0	129	1730713522437118300	CMakeFiles/nback_cimpl.dir/nback.c.o	383fe1e92d175e23
+1	130	1730713522437118300	CMakeFiles/JniBridge.dir/JniBridge.c.o	7323a01ffe27ce3b
+129	167	1730713522473784745	/home/riff/repos/nback-lab/app/build/intermediates/cxx/Debug/3e01z3q1/obj/x86_64/libnback_cimpl.so	78127b4e3e0e1129
+167	198	1730713522507117877	/home/riff/repos/nback-lab/app/build/intermediates/cxx/Debug/3e01z3q1/obj/x86_64/libJniBridge.so	41cdb7df79e5ecc4

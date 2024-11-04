@@ -70,6 +70,8 @@ class GameVM(
     private val nBackHelper = NBackHelper()  // Helper that generate the event array
     private var events = emptyArray<Int>()  // Array with all events
 
+    private var currentEventIndex = -1
+
     override fun setGameType(gameType: GameType) {
         // update the gametype in the gamestate
         _gameState.value = _gameState.value.copy(gameType = gameType)
@@ -77,6 +79,7 @@ class GameVM(
 
     override fun startGame() {
         job?.cancel()  // Cancel any existing game loop
+        currentEventIndex = 0
 
         // Get the events from our C-model (returns IntArray, so we need to convert to Array<Int>)
         events = nBackHelper.generateNBackString(10, 9, 30, nBack).toList().toTypedArray()  // Todo Higher Grade: currently the size etc. are hardcoded, make these based on user input
@@ -97,6 +100,11 @@ class GameVM(
          * Todo: This function should check if there is a match when the user presses a match button
          * Make sure the user can only register a match once for each event.
          */
+
+        if (currentEventIndex >= nBack) {
+
+        }
+
     }
     private fun runAudioGame() {
         // Todo: Make work for Basic grade
@@ -148,8 +156,9 @@ data class GameState(
 )
 
 class FakeVM: GameViewModel{
+    private val _gameState = MutableStateFlow(GameState())
     override val gameState: StateFlow<GameState>
-        get() = MutableStateFlow(GameState()).asStateFlow()
+        get() = _gameState.asStateFlow()
     override val score: StateFlow<Int>
         get() = MutableStateFlow(2).asStateFlow()
     override val highscore: StateFlow<Int>
@@ -158,6 +167,8 @@ class FakeVM: GameViewModel{
         get() = 2
 
     override fun setGameType(gameType: GameType) {
+        // update the gametype in the gamestate
+        _gameState.value = _gameState.value.copy(gameType = gameType)
     }
 
     override fun startGame() {
