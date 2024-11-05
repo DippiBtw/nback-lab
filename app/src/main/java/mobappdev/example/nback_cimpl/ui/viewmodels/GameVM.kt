@@ -39,6 +39,7 @@ interface GameViewModel {
     val score: StateFlow<Int>
     val highscore: StateFlow<Int>
     val nBack: Int
+    val gridSize: Int
 
     fun setGameType(gameType: GameType)
     fun startGame()
@@ -63,6 +64,7 @@ class GameVM(
 
     // nBack is currently hardcoded
     override val nBack: Int = 2
+    override val gridSize: Int = 5
 
     private var job: Job? = null  // coroutine job for the game event
     private val eventInterval: Long = 2000L  // 2000 ms (2s)
@@ -71,6 +73,12 @@ class GameVM(
     private var events = emptyArray<Int>()  // Array with all events
 
     private var currentEventIndex = -1
+    private var guessed = false
+
+    // Scoring settings
+    private val correctMatchPoints = 1
+    private val incorrectMatchPenalty = 1
+    private val minScore = 0  // Minimum score allowed
 
     override fun setGameType(gameType: GameType) {
         // update the gametype in the gamestate
@@ -82,7 +90,7 @@ class GameVM(
         currentEventIndex = 0
 
         // Get the events from our C-model (returns IntArray, so we need to convert to Array<Int>)
-        events = nBackHelper.generateNBackString(10, 9, 30, nBack).toList().toTypedArray()  // Todo Higher Grade: currently the size etc. are hardcoded, make these based on user input
+        events = nBackHelper.generateNBackString(10, gridSize*gridSize, 30, nBack).toList().toTypedArray()  // Todo Higher Grade: currently the size etc. are hardcoded, make these based on user input
         Log.d("GameVM", "The following sequence was generated: ${events.contentToString()}")
 
         job = viewModelScope.launch {
@@ -91,18 +99,32 @@ class GameVM(
                 GameType.AudioVisual -> runAudioVisualGame()
                 GameType.Visual -> runVisualGame(events)
             }
-            // Todo: update the highscore
+
+            // Update high score if the current score is higher
+            if (_score.value > _highscore.value) {
+                _highscore.value = _score.value
+            }
         }
     }
 
     override fun checkMatch() {
-        /**
-         * Todo: This function should check if there is a match when the user presses a match button
-         * Make sure the user can only register a match once for each event.
-         */
-
         if (currentEventIndex >= nBack) {
+            val currentEvent = events[currentEventIndex]
+            val previousEvent = events[currentEventIndex - nBack]
 
+            if (currentEvent == previousEvent && !guessed) {
+                // Add points for correct match
+                _score.value += correctMatchPoints
+            } else if (currentEvent != previousEvent && !guessed) {
+                // It's an incorrect match
+                _score.value -= incorrectMatchPenalty
+            }
+            guessed = true
+
+            // Ensure score doesn't fall below minimum
+            if (_score.value < minScore) {
+                _score.value = minScore
+            }
         }
 
     }
@@ -113,7 +135,10 @@ class GameVM(
     private suspend fun runVisualGame(events: Array<Int>){
         // Todo: Replace this code for actual game code
         for (value in events) {
+            guessed = false
+            currentEventIndex++
             _gameState.value = _gameState.value.copy(eventValue = value)
+            Log.d("EVENT", "" + _gameState.value.eventValue)
             delay(eventInterval)
         }
 
@@ -165,6 +190,8 @@ class FakeVM: GameViewModel{
         get() = MutableStateFlow(42).asStateFlow()
     override val nBack: Int
         get() = 2
+    override val gridSize: Int
+        get() = 5
 
     override fun setGameType(gameType: GameType) {
         // update the gametype in the gamestate

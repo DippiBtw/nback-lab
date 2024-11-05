@@ -1,6 +1,9 @@
 package mobappdev.example.nback_cimpl.ui.screens
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,44 +23,43 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import mobappdev.example.nback_cimpl.ui.viewmodels.FakeVM
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameType
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameViewModel
-import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 @Composable
 fun GameScreen(vm: GameViewModel, onNavigateBack: () -> Unit) {
-    vm.setGameType(GameType.AudioVisual)
-
     // Get screen dimensions and calculate the smallest dimension to base grid size on
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
     val screenHeight = configuration.screenHeightDp.dp
     val smallestDimension = minOf(screenWidth, screenHeight)
 
-
-    // Game controls based on game type
+    // Load Portrait or Landscape mode
     if (smallestDimension == screenWidth)
-        PortraitMode(vm, configuration)
+        PortraitMode(vm, configuration, onNavigateBack)
     else
-        LandscapeMode(vm, configuration)
+        LandscapeMode(vm, configuration, onNavigateBack)
 }
 
 @Composable
-fun PortraitMode(vm: GameViewModel, configuration: Configuration) {
+fun PortraitMode(vm: GameViewModel, configuration: Configuration, onNavigateBack: () -> Unit) {
     val score = vm.score.collectAsState().value
     val highScore = vm.highscore.collectAsState().value
+    val eventValue = vm.gameState.collectAsState().value.eventValue
     val gameType = vm.gameState.collectAsState().value.gameType
 
     Column(
@@ -66,25 +68,48 @@ fun PortraitMode(vm: GameViewModel, configuration: Configuration) {
             .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Top section with score and high score
-        Column(
+        // Top section with back button, score, and high score
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                modifier = Modifier.padding(6.dp),
-                text = "High Score: $highScore",
-                style = MaterialTheme.typography.titleLarge
-            )
-            Text(
-                text = "Score: $score",
-                style = MaterialTheme.typography.titleLarge
-            )
+            // Back button on the left
+            Button(
+                onClick = onNavigateBack,
+                modifier = Modifier
+                    .width((configuration.screenWidthDp * 0.35).dp)
+                    .height(configuration.screenHeightDp.times(0.07).dp),
+                shape = RoundedCornerShape(6.dp)
+            ) {
+                Text(
+                    text = "Back",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+
+            // Score and high score on the right
+            Column(
+                horizontalAlignment = Alignment.End // Aligns text to the right
+            ) {
+                Text(
+                    text = "Best: $highScore",
+                    style = MaterialTheme.typography.titleLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "Score: $score",
+                    style = MaterialTheme.typography.titleLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
 
-        GridBox(configuration.screenWidthDp, Modifier.fillMaxWidth())
+        GridBox(configuration.screenWidthDp, Modifier.fillMaxWidth(), vm.gridSize, eventValue)
 
         Row(
             modifier = Modifier
@@ -133,9 +158,10 @@ fun PortraitMode(vm: GameViewModel, configuration: Configuration) {
 }
 
 @Composable
-fun LandscapeMode(vm: GameViewModel, configuration: Configuration) {
+fun LandscapeMode(vm: GameViewModel, configuration: Configuration, onNavigateBack: () -> Unit) {
     val score = vm.score.collectAsState().value
     val highScore = vm.highscore.collectAsState().value
+    val eventValue = vm.gameState.collectAsState().value.eventValue
     val gameType = vm.gameState.collectAsState().value.gameType
 
     Row(
@@ -151,20 +177,42 @@ fun LandscapeMode(vm: GameViewModel, configuration: Configuration) {
                 .fillMaxHeight()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.SpaceEvenly,
         ) {
-            Text(
-                modifier = Modifier.padding(6.dp),
-                text = "High Score: $highScore",
-                style = MaterialTheme.typography.titleLarge
-            )
-            Text(
-                text = "Score: $score",
-                style = MaterialTheme.typography.titleLarge
-            )
+            // Back button on the left
+            Button(
+                onClick = onNavigateBack,
+                modifier = Modifier
+                    .width((configuration.screenHeightDp * 0.35).dp)
+                    .height(configuration.screenWidthDp.times(0.07).dp),
+                shape = RoundedCornerShape(6.dp)
+            ) {
+                Text(
+                    text = "Back",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+
+            // Score and high score on the bottom
+            Column(
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = "Best: $highScore",
+                    style = MaterialTheme.typography.displayMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "Score: $score",
+                    style = MaterialTheme.typography.displayMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
 
-        GridBox(configuration.screenHeightDp, Modifier)
+        GridBox(configuration.screenHeightDp, Modifier, vm.gridSize, eventValue)
 
         // Game control buttons
         Column(
@@ -214,12 +262,41 @@ fun LandscapeMode(vm: GameViewModel, configuration: Configuration) {
 }
 
 @Composable
-fun GridBox(smallestDimension: Int, modifier: Modifier) {
-    val gridSize = 3
+fun GridBox(smallestDimension: Int, modifier: Modifier, gridSize: Int, eventValue: Int) {
     val boxColor = MaterialTheme.colorScheme.primary
+    val highlightColor = MaterialTheme.colorScheme.inversePrimary
     val size = (smallestDimension * 0.80).toInt()
     val boxSize = size / gridSize
+    var index = 1
 
+    // Define animation parameters
+    val fadeOutDuration = 1000 // Duration of the fade-out effect in milliseconds
+    val animationDelay = 100L  // Delay between animations to reduce overlapping issues
+
+    // Track animatables and force each to reset when `eventValue` changes
+    val cellIntensityMap = remember { mutableStateMapOf<Int, Animatable<Float, *>>() }
+
+    // Trigger a new animation on every `eventValue` change
+    LaunchedEffect(eventValue) {
+        // Reset or create a new Animatable for the current `eventValue`
+        val animatable = cellIntensityMap[eventValue] ?: Animatable(1f).also {
+            cellIntensityMap[eventValue] = it
+        }
+
+        // Ensure the animatable starts at full intensity
+        animatable.snapTo(1f)
+
+        // Apply a delay to prevent overlapping if animations queue up
+        kotlinx.coroutines.delay(animationDelay)
+
+        // Start the fade-out animation
+        animatable.animateTo(
+            targetValue = 0f,
+            animationSpec = tween(durationMillis = fadeOutDuration, easing = LinearEasing)
+        )
+    }
+
+    // Display grid of boxes with animated colors based on intensity
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -230,12 +307,17 @@ fun GridBox(smallestDimension: Int, modifier: Modifier) {
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 repeat(gridSize) {
+                    // Get the current intensity for each box; default to 0f if no animation is active
+                    val intensity = cellIntensityMap[index]?.value ?: 0f
+                    val animatedColor = lerp(boxColor, highlightColor, intensity)
+
                     Box(
                         modifier = Modifier
                             .size(boxSize.dp)
                             .clip(RoundedCornerShape(6.dp))
-                            .background(boxColor)
+                            .background(animatedColor)
                     )
+                    index++
                 }
             }
         }

@@ -1,0 +1,47 @@
+{
+  "buildFiles": [
+    "/home/riff/repos/nback-lab/app/src/main/cpp/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/home/riff/Android/Sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/home/riff/repos/nback-lab/app/.cxx/Debug/2p6u2w5s/x86",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/home/riff/Android/Sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/home/riff/repos/nback-lab/app/.cxx/Debug/2p6u2w5s/x86",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "JniBridge::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86",
+      "artifactName": "JniBridge",
+      "output": "/home/riff/repos/nback-lab/app/build/intermediates/cxx/Debug/2p6u2w5s/obj/x86/libJniBridge.so",
+      "runtimeFiles": [
+        "/home/riff/repos/nback-lab/app/build/intermediates/cxx/Debug/2p6u2w5s/obj/x86/libnback_cimpl.so"
+      ]
+    },
+    "nback_cimpl::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "x86",
+      "artifactName": "nback_cimpl",
+      "output": "/home/riff/repos/nback-lab/app/build/intermediates/cxx/Debug/2p6u2w5s/obj/x86/libnback_cimpl.so",
+      "runtimeFiles": []
+    }
+  },
+  "toolchains": {
+    "toolchain": {
+      "cCompilerExecutable": "/home/riff/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang.lld",
+      "cppCompilerExecutable": "/home/riff/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++.lld"
+    }
+  },
+  "cFileExtensions": [
+    "c"
+  ],
+  "cppFileExtensions": []
+}
