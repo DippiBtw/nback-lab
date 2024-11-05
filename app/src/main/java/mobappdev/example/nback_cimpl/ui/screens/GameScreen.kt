@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextOverflow
@@ -264,13 +265,14 @@ fun LandscapeMode(vm: GameViewModel, configuration: Configuration, onNavigateBac
 @Composable
 fun GridBox(smallestDimension: Int, modifier: Modifier, gridSize: Int, eventValue: Int) {
     val boxColor = MaterialTheme.colorScheme.primary
-    val highlightColor = MaterialTheme.colorScheme.inversePrimary
+    val highlightColor = Color.Red
     val size = (smallestDimension * 0.80).toInt()
     val boxSize = size / gridSize
     var index = 1
 
     // Define animation parameters
     val fadeOutDuration = 1000 // Duration of the fade-out effect in milliseconds
+    val delayDuration = 350 // Duration of the fade-out effect in milliseconds
     val animationDelay = 100L  // Delay between animations to reduce overlapping issues
 
     // Track animatables and force each to reset when `eventValue` changes
@@ -292,7 +294,7 @@ fun GridBox(smallestDimension: Int, modifier: Modifier, gridSize: Int, eventValu
         // Start the fade-out animation
         animatable.animateTo(
             targetValue = 0f,
-            animationSpec = tween(durationMillis = fadeOutDuration, easing = LinearEasing)
+            animationSpec = tween(durationMillis = fadeOutDuration, delayMillis = delayDuration, easing = LinearEasing)
         )
     }
 
