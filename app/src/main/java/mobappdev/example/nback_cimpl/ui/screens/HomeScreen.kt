@@ -1,7 +1,6 @@
 package mobappdev.example.nback_cimpl.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -15,7 +14,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -28,11 +26,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.launch
 import mobappdev.example.nback_cimpl.R
 import mobappdev.example.nback_cimpl.ui.viewmodels.FakeVM
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameType
@@ -57,9 +53,7 @@ fun HomeScreen(
     onNavigateToGame: () -> Unit
 ) {
     val highscore by vm.highscore.collectAsState()  // Highscore is its own StateFlow
-    val gameState by vm.gameState.collectAsState()
     val snackBarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) }
@@ -78,7 +72,7 @@ fun HomeScreen(
             )
 
             // Add sliders section in the middle
-            SlidersSection()
+            SlidersSection(vm)
 
             Text(
                 modifier = Modifier.padding(16.dp),
@@ -149,27 +143,61 @@ fun GameTypeButton(
 
 
 @Composable
-fun SlidersSection() {
+fun SlidersSection(vm: GameViewModel) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.padding(32.dp)
+        modifier = Modifier.padding(horizontal = 32.dp)
     ) {
-        SliderWithLabel(label = "N-Back Level")
-        SliderWithLabel(label = "Grid Size")
-        SliderWithLabel(label = "Number of Events")
-        SliderWithLabel(label = "Interval of Events")
+        SliderWithLabel(
+            label = "N-Back Level",
+            value = vm.nBack.collectAsState().value.toFloat(),
+            range = 1f..6f,
+            steps = 4,
+            updateFunc = { value ->
+                vm.saveNBackLevel(value.toInt())  // Update using VM function
+            }
+        )
+        SliderWithLabel(
+            label = "Grid Size",
+            value = vm.gridSize.collectAsState().value.toFloat(),
+            range = 3f..6f,
+            steps = 2,
+            updateFunc = { value ->
+                vm.saveGridSize(value.toInt())  // Update using VM function
+            }
+        )
+        SliderWithLabel(
+            label = "Number of Events",
+            value = vm.numberOfEvents.collectAsState().value.toFloat(),
+            range = 10f..40f,
+            steps = 28,
+            updateFunc = { value ->
+                vm.saveNumEvents(value.toInt())  // Update using VM function
+            }
+        )
+        SliderWithLabel(
+            label = "Interval of Events",
+            value = vm.eventInterval.collectAsState().value.toFloat(),
+            range = 1000f..5000f,
+            steps = 3,
+            updateFunc = { value ->
+                vm.saveEventInterval(value.toLong())  // Update using VM function
+            }
+        )
     }
 }
 
+
 @Composable
-fun SliderWithLabel(label: String) {
+fun SliderWithLabel(label: String, value: Float, range: ClosedFloatingPointRange<Float>, steps: Int = 1, updateFunc: (Float) -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = label, style = MaterialTheme.typography.bodyMedium)
+        Text(text = "$label: ${value.toInt()}", style = MaterialTheme.typography.bodyMedium)
         Slider(
-            value = 0f,
-            onValueChange = {},
-            valueRange = 0f..100f,
+            value = value,
+            onValueChange = { newValue -> updateFunc(newValue) },
+            valueRange = range,
+            steps = steps,
             modifier = Modifier.fillMaxWidth()
         )
     }

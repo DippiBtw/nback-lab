@@ -1,7 +1,6 @@
 package mobappdev.example.nback_cimpl.ui.screens
 
 import android.content.res.Configuration
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -95,7 +94,7 @@ fun GameControlButtons(gameType: GameType, vm: GameViewModel, modifier: Modifier
 fun PortraitMode(vm: GameViewModel, configuration: Configuration, onNavigateBack: () -> Unit) {
     val score = vm.score.collectAsState().value
     val highScore = vm.highscore.collectAsState().value
-    val gameType = vm.gameState.collectAsState().value.gameType
+    val gameType = vm.gameType.collectAsState().value
 
     Column(
         modifier = Modifier
@@ -132,7 +131,7 @@ fun PortraitMode(vm: GameViewModel, configuration: Configuration, onNavigateBack
 fun LandscapeMode(vm: GameViewModel, configuration: Configuration, onNavigateBack: () -> Unit) {
     val score = vm.score.collectAsState().value
     val highScore = vm.highscore.collectAsState().value
-    val gameType = vm.gameState.collectAsState().value.gameType
+    val gameType = vm.gameType.collectAsState().value
 
     Row(
         modifier = Modifier
@@ -175,10 +174,11 @@ fun GridBox(smallestDimension: Int, modifier: Modifier = Modifier, vm: GameViewM
     val boxColor = MaterialTheme.colorScheme.primary
     val highlightColor = Color.Red
     val size = (smallestDimension * 0.80).toInt()
-    val gridSize = vm.gridSize
+    val gridSize = vm.gridSize.collectAsState().value
     val boxSize = size / gridSize
+    val eventInterval = vm.eventInterval.collectAsState().value
 
-    val gameState = vm.gameState.collectAsState().value
+    val gameState = vm.visualState.collectAsState().value
     val highlightMap = remember { mutableStateMapOf<Int, MutableState<Boolean>>() }
 
     // Initialize highlight state for each cell
@@ -193,7 +193,7 @@ fun GridBox(smallestDimension: Int, modifier: Modifier = Modifier, vm: GameViewM
         highlightMap.values.forEach { it.value = false }
         kotlinx.coroutines.delay(300L)
         highlightMap[gameState.eventValue]?.value = true
-        kotlinx.coroutines.delay(vm.eventInterval)
+        kotlinx.coroutines.delay(eventInterval)
         highlightMap[gameState.eventValue]?.value = false
     }
 
@@ -227,14 +227,14 @@ fun GridBox(smallestDimension: Int, modifier: Modifier = Modifier, vm: GameViewM
 
 @Composable
 fun AudioButton(vm: GameViewModel, modifier: Modifier) {
-    Button(onClick = { vm.checkMatch() }, modifier = modifier, shape = RoundedCornerShape(6.dp)) {
+    Button(onClick = { vm.checkMatch(GameType.Audio) }, modifier = modifier, shape = RoundedCornerShape(6.dp)) {
         Text("Sound", style = MaterialTheme.typography.titleLarge)
     }
 }
 
 @Composable
 fun PositionButton(vm: GameViewModel, modifier: Modifier) {
-    Button(onClick = { vm.checkMatch() }, modifier = modifier, shape = RoundedCornerShape(6.dp)) {
+    Button(onClick = { vm.checkMatch(GameType.Visual) }, modifier = modifier, shape = RoundedCornerShape(6.dp)) {
         Text("Position", style = MaterialTheme.typography.titleLarge)
     }
 }
