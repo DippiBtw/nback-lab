@@ -131,11 +131,6 @@ class GameVM(
     private val _audioFeedback = MutableStateFlow(GuessFeedback.None)
     override val audioFeedback: StateFlow<GuessFeedback> get() = _audioFeedback.asStateFlow()
 
-    // Scoring settings
-    private val correctMatchPoints = 1
-    private val incorrectMatchPenalty = 1
-    private val minScore = 0  // Minimum score allowed
-
     private var isInitialized = false
 
     override fun setGameType(gameType: GameType) {
@@ -147,13 +142,6 @@ class GameVM(
         _currentEventIndex.value = 0
         _score.value = 0
 
-        viewModelScope.launch {
-            userPreferencesRepository.saveNBackLevel(_nBack.value)
-            userPreferencesRepository.saveGridSize(_gridSize.value)
-            userPreferencesRepository.saveNumEvents(_numberOfEvents.value)
-            userPreferencesRepository.saveEventInterval(_eventInterval.value)
-        }
-
         _visualState.value.finished = false
         _audioState.value.finished = false
 
@@ -162,7 +150,7 @@ class GameVM(
             visualEvents = nBackHelper.generateNBackString(
                 numberOfEvents.value,
                 gridSize.value * gridSize.value,
-                30,
+               35,
                 nBack.value
             ).toList()
                 .toTypedArray()
@@ -175,7 +163,7 @@ class GameVM(
             audioEvents = nBackHelper.generateNBackString(
                 numberOfEvents.value,
                 min(gridSize.value * gridSize.value, 26),
-                30,
+                25,
                 nBack.value
             ).toList()
                 .toTypedArray()
@@ -192,6 +180,7 @@ class GameVM(
                 GameType.Visual -> runVisualGame()
             }
 
+            endGame()
             saveHighscore()
         }
     }
@@ -199,14 +188,18 @@ class GameVM(
     override fun endGame() {
         job?.cancel()
         _currentEventIndex.value = 0
+
         audioEvents = emptyArray<Int>()
         visualEvents = emptyArray<Int>()
+
         _visualState.value =
             _visualState.value.copy(eventValue = -1, index = 0)
         _audioState.value =
             _audioState.value.copy(eventValue = -1, index = 0)
+
         _visualState.value.finished = true
         _audioState.value.finished = true
+
         _visualFeedback.value = GuessFeedback.None
         _audioFeedback.value = GuessFeedback.None
     }
@@ -214,6 +207,8 @@ class GameVM(
     override fun checkMatch(type: GameType) {
         if (_currentEventIndex.value >= nBack.value &&
             _currentEventIndex.value < if (type == GameType.Visual) visualEvents.size else audioEvents.size) {
+
+            // Get relevant events
             val currentEvent =
                 if (type == GameType.Visual) visualEvents[_currentEventIndex.value]
                 else audioEvents[_currentEventIndex.value]
@@ -221,16 +216,15 @@ class GameVM(
                 if (type == GameType.Visual) visualEvents[_currentEventIndex.value - nBack.value]
                 else audioEvents[_currentEventIndex.value - nBack.value]
 
+            // Give/Remove points based on correctness, user can only make one guess per round
             if (currentEvent == previousEvent && if (type == GameType.Visual) !_visualGuess.value else !_audioGuess.value) {
-                // Add points for correct match
-                _score.value += correctMatchPoints
+                _score.value += 1
                 if (type == GameType.Visual)
                     _visualFeedback.value = GuessFeedback.Correct
                 else
                     _audioFeedback.value = GuessFeedback.Correct
             } else if (currentEvent != previousEvent && if (type == GameType.Visual) !_visualGuess.value else !_audioGuess.value) {
-                // It's an incorrect match
-                _score.value -= incorrectMatchPenalty
+                _score.value -= 1
                 if (type == GameType.Visual)
                     _visualFeedback.value = GuessFeedback.Incorrect
                 else
@@ -243,8 +237,8 @@ class GameVM(
                 _audioGuess.value = true
 
             // Ensure score doesn't fall below minimum
-            if (_score.value < minScore) {
-                _score.value = minScore
+            if (_score.value < 0) {
+                _score.value = 0
             }
         }
 
@@ -257,10 +251,8 @@ class GameVM(
         if (eventValue in 1..26) {
             // Calculate the character based on the eventValue
             val letter = ('A'.code + eventValue - 1).toChar()
-            // Convert to string and speak
             _textToSpeech?.speak(letter.toString(), TextToSpeech.QUEUE_FLUSH, null, null)
         } else {
-            // Optionally handle cases where eventValue is out of range
             Log.e("sayLetter", "Invalid eventValue: $eventValue. Must be between 1 and 26.")
         }
     }
@@ -282,7 +274,6 @@ class GameVM(
             _currentEventIndex.value++
 
         }
-        endGame()
     }
 
     private suspend fun runVisualGame() {
@@ -300,7 +291,6 @@ class GameVM(
             delay(eventInterval.value)
             _currentEventIndex.value++
         }
-        endGame()
     }
 
     private suspend fun runAudioVisualGame() {
@@ -324,7 +314,6 @@ class GameVM(
             delay(eventInterval.value)
             _currentEventIndex.value++
         }
-        endGame()
     }
 
     // Method to save Highscore
@@ -370,7 +359,6 @@ class GameVM(
 
     // Method to save Event Interval
     override fun saveEventInterval(interval: Long) {
-        Log.d("HAHAHAHAHAHA", "" + isInitialized)
         if (isInitialized) {
             _eventInterval.value = interval
             viewModelScope.launch {
@@ -389,8 +377,6 @@ class GameVM(
     }
 
     init {
-        // Code that runs during creation of the vm
-
         // Initiate Text-to-Speech
         viewModelScope.launch {
             _textToSpeech = TextToSpeech(application) { status ->
