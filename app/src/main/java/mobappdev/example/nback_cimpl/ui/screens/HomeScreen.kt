@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -66,7 +68,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it),
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.SpaceEvenly,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -74,83 +76,105 @@ fun HomeScreen(
                 text = "High-Score = $highscore",
                 style = MaterialTheme.typography.headlineLarge
             )
-            // Todo: You'll probably want to change this "BOX" part of the composable
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    if (gameState.eventValue != -1) {
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = "Current eventValue is: ${gameState.eventValue}",
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                    Button(onClick = vm::startGame) {
-                        Text(text = "Generate eventValues")
-                    }
-                }
-            }
+
+            // Add sliders section in the middle
+            SlidersSection()
+
             Text(
                 modifier = Modifier.padding(16.dp),
                 text = "Start Game".uppercase(),
                 style = MaterialTheme.typography.displaySmall
             )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Button(onClick = {
-                    vm.setGameType(GameType.Audio)
-                    vm.startGame()
-                    onNavigateToGame()
-                }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.sound_on),
-                        contentDescription = "Sound",
-                        modifier = Modifier
-                            .height(48.dp)
-                            .aspectRatio(3f / 2f)
-                    )
-                }
-                Button(onClick = {
-                    vm.setGameType(GameType.AudioVisual)
-                    vm.startGame()
-                    onNavigateToGame()
-                }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.brain),
-                        contentDescription = "Sound",
-                        modifier = Modifier
-                            .height(48.dp)
-                            .aspectRatio(3f / 2f)
-                    )
-                }
-                Button(
-                    onClick = {
-                        vm.setGameType(GameType.Visual)
-                        vm.startGame()
-                        onNavigateToGame()
-                    }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.visual),
-                        contentDescription = "Visual",
-                        modifier = Modifier
-                            .height(48.dp)
-                            .aspectRatio(3f / 2f)
-                    )
-                }
-            }
+
+            // Game type buttons
+            GameTypeButtons(vm = vm, onNavigateToGame = onNavigateToGame)
         }
     }
 }
+
+@Composable
+fun GameTypeButtons(vm: GameViewModel, onNavigateToGame: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        GameTypeButton(
+            icon = R.drawable.sound_on,
+            gameType = GameType.Audio,
+            vm = vm,
+            onNavigateToGame = onNavigateToGame
+        )
+        GameTypeButton(
+            icon = R.drawable.brain,
+            gameType = GameType.AudioVisual,
+            vm = vm,
+            onNavigateToGame = onNavigateToGame
+        )
+        GameTypeButton(
+            icon = R.drawable.visual,
+            gameType = GameType.Visual,
+            vm = vm,
+            onNavigateToGame = onNavigateToGame
+        )
+    }
+}
+
+@Composable
+fun GameTypeButton(
+    icon: Int,
+    gameType: GameType,
+    vm: GameViewModel,
+    onNavigateToGame: () -> Unit
+) {
+    Button(
+        onClick = {
+            vm.setGameType(gameType)
+            vm.startGame()
+            onNavigateToGame()
+        }, shape = RoundedCornerShape(6.dp),
+        modifier = Modifier.padding(4.dp)
+    ) {
+        Icon(
+            painter = painterResource(id = icon),
+            contentDescription = "Game Type",
+            modifier = Modifier
+                .height(48.dp)
+                .aspectRatio(3f / 2f),
+        )
+    }
+}
+
+
+@Composable
+fun SlidersSection() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.padding(32.dp)
+    ) {
+        SliderWithLabel(label = "N-Back Level")
+        SliderWithLabel(label = "Grid Size")
+        SliderWithLabel(label = "Number of Events")
+        SliderWithLabel(label = "Interval of Events")
+    }
+}
+
+@Composable
+fun SliderWithLabel(label: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = label, style = MaterialTheme.typography.bodyMedium)
+        Slider(
+            value = 0f,
+            onValueChange = {},
+            valueRange = 0f..100f,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
 
 @Preview
 @Composable
@@ -158,7 +182,7 @@ fun HomeScreenPreview() {
     val navController = rememberNavController()
 
     // Since I am injecting a VM into my homescreen that depends on Application context, the preview doesn't work.
-    Surface(){
+    Surface() {
         HomeScreen(FakeVM(), onNavigateToGame = { navController.navigate("game") })
     }
 }

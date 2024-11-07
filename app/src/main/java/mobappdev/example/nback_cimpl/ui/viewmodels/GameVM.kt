@@ -40,9 +40,11 @@ interface GameViewModel {
     val highscore: StateFlow<Int>
     val nBack: Int
     val gridSize: Int
+    val eventInterval: Long
 
     fun setGameType(gameType: GameType)
     fun startGame()
+    fun endGame()
 
     fun checkMatch()
 }
@@ -67,7 +69,7 @@ class GameVM(
     override val gridSize: Int = 5
 
     private var job: Job? = null  // coroutine job for the game event
-    private val eventInterval: Long = 2000L  // 2000 ms (2s)
+    override val eventInterval: Long = 2000L  // 2000 ms (2s)
 
     private val nBackHelper = NBackHelper()  // Helper that generate the event array
     private var events = emptyArray<Int>()  // Array with all events
@@ -107,8 +109,15 @@ class GameVM(
         }
     }
 
+    override fun endGame() {
+        job?.cancel()
+        currentEventIndex = 0
+        events = emptyArray<Int>()
+        _gameState.value = _gameState.value.copy(eventValue = -1, index = _gameState.value.index+1)
+    }
+
     override fun checkMatch() {
-        if (currentEventIndex >= nBack) {
+        if (currentEventIndex >= nBack && currentEventIndex < events.size) {
             val currentEvent = events[currentEventIndex]
             val previousEvent = events[currentEventIndex - nBack]
 
@@ -133,15 +142,14 @@ class GameVM(
     }
 
     private suspend fun runVisualGame(events: Array<Int>){
-        // Todo: Replace this code for actual game code
         for (value in events) {
             guessed = false
             currentEventIndex++
-            _gameState.value = _gameState.value.copy(eventValue = value)
+            _gameState.value = _gameState.value.copy(eventValue = value, index = _gameState.value.index+1)
             Log.d("EVENT", "" + _gameState.value.eventValue)
             delay(eventInterval)
         }
-
+        endGame()
     }
 
     private fun runAudioVisualGame(){
@@ -177,7 +185,8 @@ enum class GameType{
 data class GameState(
     // You can use this state to push values from the VM to your UI.
     val gameType: GameType = GameType.Visual,  // Type of the game
-    val eventValue: Int = -1  // The value of the array string
+    val eventValue: Int = -1,  // The value of the array string
+    val index: Int = 0
 )
 
 class FakeVM: GameViewModel{
@@ -192,6 +201,8 @@ class FakeVM: GameViewModel{
         get() = 2
     override val gridSize: Int
         get() = 5
+    override val eventInterval: Long
+        get() = 2000L
 
     override fun setGameType(gameType: GameType) {
         // update the gametype in the gamestate
@@ -199,6 +210,9 @@ class FakeVM: GameViewModel{
     }
 
     override fun startGame() {
+    }
+
+    override fun endGame() {
     }
 
     override fun checkMatch() {
