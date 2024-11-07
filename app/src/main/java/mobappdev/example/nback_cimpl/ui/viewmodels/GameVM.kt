@@ -47,6 +47,11 @@ interface GameViewModel {
     val eventInterval: StateFlow<Long>
     val numberOfEvents: StateFlow<Int>
 
+    val visualGuess: StateFlow<Boolean>
+    val audioGuess: StateFlow<Boolean>
+    val visualFeedback: StateFlow<GuessFeedback>
+    val audioFeedback: StateFlow<GuessFeedback>
+
     fun setGameType(gameType: GameType)
     fun startGame()
     fun endGame()
@@ -109,8 +114,17 @@ class GameVM(
     private var visualEvents = emptyArray<Int>()  // Array with all events
     private var currentEventIndex = -1
 
-    private var visualGuess = false
-    private var audioGuess = false
+    private val _visualGuess = MutableStateFlow(false)
+    override val visualGuess: StateFlow<Boolean>
+        get() = _visualGuess
+    private val _audioGuess = MutableStateFlow(false)
+    override val audioGuess: StateFlow<Boolean>
+        get() = _audioGuess
+
+    private val _visualFeedback = MutableStateFlow(GuessFeedback.None)
+    override val visualFeedback: StateFlow<GuessFeedback> get() = _visualFeedback.asStateFlow()
+    private val _audioFeedback = MutableStateFlow(GuessFeedback.None)
+    override val audioFeedback: StateFlow<GuessFeedback> get() = _audioFeedback.asStateFlow()
 
     // Scoring settings
     private val correctMatchPoints = 1
@@ -134,6 +148,9 @@ class GameVM(
             userPreferencesRepository.saveNumEvents(_numberOfEvents.value)
             userPreferencesRepository.saveEventInterval(_eventInterval.value)
         }
+
+        _visualState.value.finished = false
+        _audioState.value.finished = false
 
         // Get the events from our C-model (returns IntArray, so we need to convert to Array<Int>)
         if (gameType.value != GameType.Audio) {
@@ -183,6 +200,10 @@ class GameVM(
             _visualState.value.copy(eventValue = -1, index = 0)
         _audioState.value =
             _audioState.value.copy(eventValue = -1, index = 0)
+        _visualState.value.finished = true
+        _audioState.value.finished = true
+        _visualFeedback.value = GuessFeedback.None
+        _audioFeedback.value = GuessFeedback.None
     }
 
     override fun checkMatch(type: GameType) {
@@ -195,18 +216,26 @@ class GameVM(
                 if (type == GameType.Visual) visualEvents[currentEventIndex - nBack.value]
                 else audioEvents[currentEventIndex - nBack.value]
 
-            if (currentEvent == previousEvent && if (type == GameType.Visual) !visualGuess else !audioGuess) {
+            if (currentEvent == previousEvent && if (type == GameType.Visual) !_visualGuess.value else !_audioGuess.value) {
                 // Add points for correct match
                 _score.value += correctMatchPoints
-            } else if (currentEvent != previousEvent && if (type == GameType.Visual) !visualGuess else !audioGuess) {
+                if (type == GameType.Visual)
+                    _visualFeedback.value = GuessFeedback.Correct
+                else
+                    _audioFeedback.value = GuessFeedback.Correct
+            } else if (currentEvent != previousEvent && if (type == GameType.Visual) !_visualGuess.value else !_audioGuess.value) {
                 // It's an incorrect match
                 _score.value -= incorrectMatchPenalty
+                if (type == GameType.Visual)
+                    _visualFeedback.value = GuessFeedback.Incorrect
+                else
+                    _audioFeedback.value = GuessFeedback.Incorrect
             }
 
             if (type == GameType.Visual)
-                visualGuess = true
+                _visualGuess.value = true
             else
-                audioGuess = true
+                _audioGuess.value = true
 
             // Ensure score doesn't fall below minimum
             if (_score.value < minScore) {
@@ -236,7 +265,8 @@ class GameVM(
         delay(1500L)
 
         for (value in audioEvents) {
-            visualGuess = false
+            _audioFeedback.value = GuessFeedback.None
+            _audioGuess.value = false
 
             _audioState.value =
                 _audioState.value.copy(eventValue = value, index = _visualState.value.index + 1)
@@ -255,7 +285,8 @@ class GameVM(
         delay(1500L)
 
         for (value in visualEvents) {
-            visualGuess = false
+            _visualFeedback.value = GuessFeedback.None
+            _visualGuess.value = false
 
             _visualState.value =
                 _visualState.value.copy(eventValue = value, index = _visualState.value.index + 1)
@@ -271,8 +302,10 @@ class GameVM(
         delay(1500L)
 
         for (i in 0 until numberOfEvents.value) {
-            visualGuess = false
-            audioGuess = false
+            _visualFeedback.value = GuessFeedback.None
+            _audioFeedback.value = GuessFeedback.None
+            _visualGuess.value = false
+            _audioGuess.value = false
 
             _audioState.value =
                 _audioState.value.copy(eventValue = audioEvents[currentEventIndex], index = _visualState.value.index + 1)
@@ -366,17 +399,11 @@ class GameVM(
         viewModelScope.launch {
             userPreferencesRepository.userPreferencesFlow.collect { preferences ->
                 _highscore.value = preferences.highscore
-                Log.d("GameVM", "Collected highscore: ${preferences.highscore}")
                 _nBack.value = preferences.nBackLevel
-                Log.d("GameVM", "Collected nBackLevel: ${preferences.nBackLevel}")
                 _gridSize.value = preferences.gridSize
-                Log.d("GameVM", "Collected gridSize: ${preferences.gridSize}")
                 _numberOfEvents.value = preferences.numEvents
-                Log.d("GameVM", "Collected numEvents: ${preferences.numEvents}")
                 _eventInterval.value = preferences.eventInterval
-                Log.d("GameVM", "Collected eventInterval: ${preferences.eventInterval}")
                 isInitialized = true
-                Log.d("GameVM", "isInitialized set to true")
             }
         }
     }
@@ -398,8 +425,15 @@ enum class GameType {
 data class GameState(
     // You can use this state to push values from the VM to your UI.
     val eventValue: Int = -1,  // The value of the array string
-    val index: Int = 0
+    val index: Int = 0,
+    var finished: Boolean = false
 )
+
+enum class GuessFeedback {
+    None,
+    Correct,
+    Incorrect
+}
 
 class FakeVM : GameViewModel {
     private val _gameState = MutableStateFlow(GameState())
@@ -421,6 +455,14 @@ class FakeVM : GameViewModel {
         get() = MutableStateFlow(2000L).asStateFlow()
     override val numberOfEvents: StateFlow<Int>
         get() = MutableStateFlow(10).asStateFlow()
+    override val visualGuess: StateFlow<Boolean>
+        get() = MutableStateFlow(false).asStateFlow()
+    override val audioGuess: StateFlow<Boolean>
+        get() = MutableStateFlow(false).asStateFlow()
+    override val visualFeedback: StateFlow<GuessFeedback>
+        get() = TODO("Not yet implemented")
+    override val audioFeedback: StateFlow<GuessFeedback>
+        get() = TODO("Not yet implemented")
 
     override fun setGameType(gameType: GameType) {
         // update the gametype in the gamestate

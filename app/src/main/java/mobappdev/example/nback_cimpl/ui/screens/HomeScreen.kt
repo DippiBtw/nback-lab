@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -22,9 +23,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -62,26 +63,30 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it),
-            verticalArrangement = Arrangement.SpaceEvenly,
+            verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                modifier = Modifier.padding(32.dp),
-                text = "High-Score = $highscore",
-                style = MaterialTheme.typography.headlineLarge
+                modifier = Modifier.padding(16.dp),
+                text = "High Score = $highscore",
+                style = MaterialTheme.typography.titleLarge
             )
 
             // Add sliders section in the middle
             SlidersSection(vm)
 
-            Text(
-                modifier = Modifier.padding(16.dp),
-                text = "Start Game".uppercase(),
-                style = MaterialTheme.typography.displaySmall
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    modifier = Modifier.padding(16.dp),
+                    text = "Start Game".uppercase(),
+                    style = MaterialTheme.typography.titleLarge
+                )
 
-            // Game type buttons
-            GameTypeButtons(vm = vm, onNavigateToGame = onNavigateToGame)
+                // Game type buttons
+                GameTypeButtons(vm = vm, onNavigateToGame = onNavigateToGame)
+            }
         }
     }
 }
@@ -123,13 +128,14 @@ fun GameTypeButton(
     vm: GameViewModel,
     onNavigateToGame: () -> Unit
 ) {
+    val width = LocalConfiguration.current.screenWidthDp
     Button(
         onClick = {
             vm.setGameType(gameType)
             vm.startGame()
             onNavigateToGame()
         }, shape = RoundedCornerShape(6.dp),
-        modifier = Modifier.padding(4.dp)
+        modifier = Modifier.padding(4.dp).width((width/4).dp),
     ) {
         Icon(
             painter = painterResource(id = icon),
@@ -149,49 +155,75 @@ fun SlidersSection(vm: GameViewModel) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier.padding(horizontal = 32.dp)
     ) {
-        SliderWithLabel(
-            label = "N-Back Level",
-            value = vm.nBack.collectAsState().value.toFloat(),
-            range = 1f..6f,
-            steps = 4,
-            updateFunc = { value ->
-                vm.saveNBackLevel(value.toInt())  // Update using VM function
-            }
-        )
-        SliderWithLabel(
-            label = "Grid Size",
-            value = vm.gridSize.collectAsState().value.toFloat(),
-            range = 3f..6f,
-            steps = 2,
-            updateFunc = { value ->
-                vm.saveGridSize(value.toInt())  // Update using VM function
-            }
-        )
-        SliderWithLabel(
-            label = "Number of Events",
-            value = vm.numberOfEvents.collectAsState().value.toFloat(),
-            range = 10f..40f,
-            steps = 28,
-            updateFunc = { value ->
-                vm.saveNumEvents(value.toInt())  // Update using VM function
-            }
-        )
-        SliderWithLabel(
-            label = "Interval of Events",
-            value = vm.eventInterval.collectAsState().value.toFloat(),
-            range = 1000f..5000f,
-            steps = 3,
-            updateFunc = { value ->
-                vm.saveEventInterval(value.toLong())  // Update using VM function
-            }
-        )
+        // First Row of sliders (two sliders side by side)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp) // Space between sliders
+        ) {
+            SliderWithLabel(
+                label = "N-Back Level",
+                value = vm.nBack.collectAsState().value.toFloat(),
+                range = 1f..6f,
+                steps = 4,
+                updateFunc = { value ->
+                    vm.saveNBackLevel(value.toInt())
+                },
+                modifier = Modifier.weight(1f) // Take up equal space in the row
+            )
+            SliderWithLabel(
+                label = "Grid Size",
+                value = vm.gridSize.collectAsState().value.toFloat(),
+                range = 3f..6f,
+                steps = 2,
+                updateFunc = { value ->
+                    vm.saveGridSize(value.toInt())
+                },
+                modifier = Modifier.weight(1f) // Take up equal space in the row
+            )
+        }
+
+        // Second Row of sliders (two sliders side by side)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp) // Space between sliders
+        ) {
+            SliderWithLabel(
+                label = "Number of Events",
+                value = vm.numberOfEvents.collectAsState().value.toFloat(),
+                range = 10f..40f,
+                steps = 28,
+                updateFunc = { value ->
+                    vm.saveNumEvents(value.toInt())
+                },
+                modifier = Modifier.weight(1f) // Take up equal space in the row
+            )
+            SliderWithLabel(
+                label = "Interval of Events",
+                value = vm.eventInterval.collectAsState().value.toFloat(),
+                range = 2000f..5000f,
+                steps = 2,
+                updateFunc = { value ->
+                    vm.saveEventInterval(value.toLong())
+                },
+                modifier = Modifier.weight(1f) // Take up equal space in the row
+            )
+        }
     }
 }
 
-
 @Composable
-fun SliderWithLabel(label: String, value: Float, range: ClosedFloatingPointRange<Float>, steps: Int = 1, updateFunc: (Float) -> Unit) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+fun SliderWithLabel(
+    label: String,
+    value: Float,
+    range: ClosedFloatingPointRange<Float>,
+    steps: Int = 1,
+    updateFunc: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+    ) {
         Text(text = "$label: ${value.toInt()}", style = MaterialTheme.typography.bodyMedium)
         Slider(
             value = value,
@@ -202,7 +234,6 @@ fun SliderWithLabel(label: String, value: Float, range: ClosedFloatingPointRange
         )
     }
 }
-
 
 @Preview
 @Composable

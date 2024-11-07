@@ -2,13 +2,31 @@ package mobappdev.example.nback_cimpl.ui.screens
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,6 +39,7 @@ import androidx.navigation.compose.rememberNavController
 import mobappdev.example.nback_cimpl.ui.viewmodels.FakeVM
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameType
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameViewModel
+import mobappdev.example.nback_cimpl.ui.viewmodels.GuessFeedback
 
 @Composable
 fun GameScreen(vm: GameViewModel, onNavigateBack: () -> Unit) {
@@ -28,10 +47,13 @@ fun GameScreen(vm: GameViewModel, onNavigateBack: () -> Unit) {
     val smallestDimension = minOf(configuration.screenWidthDp.dp, configuration.screenHeightDp.dp)
     val isPortrait = smallestDimension == configuration.screenWidthDp.dp
 
+    val isGameOver =
+        vm.visualState.collectAsState().value.finished || vm.audioState.collectAsState().value.finished
+
     if (isPortrait) {
-        PortraitMode(vm, configuration, onNavigateBack)
+        PortraitMode(vm, configuration, onNavigateBack, isGameOver)
     } else {
-        LandscapeMode(vm, configuration, onNavigateBack)
+        LandscapeMode(vm, configuration, onNavigateBack, isGameOver)
     }
 }
 
@@ -91,7 +113,12 @@ fun GameControlButtons(gameType: GameType, vm: GameViewModel, modifier: Modifier
 }
 
 @Composable
-fun PortraitMode(vm: GameViewModel, configuration: Configuration, onNavigateBack: () -> Unit) {
+fun PortraitMode(
+    vm: GameViewModel,
+    configuration: Configuration,
+    onNavigateBack: () -> Unit,
+    isGameOver: Boolean
+) {
     val score = vm.score.collectAsState().value
     val highScore = vm.highscore.collectAsState().value
     val gameType = vm.gameType.collectAsState().value
@@ -103,7 +130,9 @@ fun PortraitMode(vm: GameViewModel, configuration: Configuration, onNavigateBack
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -125,10 +154,19 @@ fun PortraitMode(vm: GameViewModel, configuration: Configuration, onNavigateBack
                 .height(configuration.screenHeightDp.times(0.18).dp)
         )
     }
+    // Show Game Over Box if finished
+    if (isGameOver) {
+        GameOverBox(vm, onNavigateBack)
+    }
 }
 
 @Composable
-fun LandscapeMode(vm: GameViewModel, configuration: Configuration, onNavigateBack: () -> Unit) {
+fun LandscapeMode(
+    vm: GameViewModel,
+    configuration: Configuration,
+    onNavigateBack: () -> Unit,
+    isGameOver: Boolean
+) {
     val score = vm.score.collectAsState().value
     val highScore = vm.highscore.collectAsState().value
     val gameType = vm.gameType.collectAsState().value
@@ -165,6 +203,50 @@ fun LandscapeMode(vm: GameViewModel, configuration: Configuration, onNavigateBac
                     .fillMaxHeight()
                     .width(configuration.screenWidthDp.times(0.18).dp)
             )
+        }
+    }
+    // Show Game Over Box if finished
+    if (isGameOver) {
+        GameOverBox(vm, onNavigateBack)
+    }
+}
+
+@Composable
+fun GameOverBox(vm: GameViewModel, onNavigateBack: () -> Unit) {
+    val score = vm.score.collectAsState().value
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.7f))
+            .padding(32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.White)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                "Game Over", style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+            Text(
+                "Score: $score", style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = {
+                    vm.endGame()
+                    onNavigateBack()
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Back to Home")
+            }
         }
     }
 }
@@ -214,9 +296,7 @@ fun GridBox(smallestDimension: Int, modifier: Modifier = Modifier, vm: GameViewM
                             .size(boxSize.dp)
                             .clip(RoundedCornerShape(6.dp))
                             .background(cellColor)
-                    ) {
-                        Text(text = "$index", color = MaterialTheme.colorScheme.inversePrimary)
-                    }
+                    )
                     index++
                 }
             }
@@ -227,14 +307,34 @@ fun GridBox(smallestDimension: Int, modifier: Modifier = Modifier, vm: GameViewM
 
 @Composable
 fun AudioButton(vm: GameViewModel, modifier: Modifier) {
-    Button(onClick = { vm.checkMatch(GameType.Audio) }, modifier = modifier, shape = RoundedCornerShape(6.dp)) {
+    val color = when (vm.audioFeedback.collectAsState().value) {
+        GuessFeedback.None -> MaterialTheme.colorScheme.primary
+        GuessFeedback.Correct -> Color.hsv(120f, 1f, 0.6f)
+        GuessFeedback.Incorrect -> Color.hsv(0f, 1f, 0.6f)
+    }
+    Button(
+        onClick = { vm.checkMatch(GameType.Audio) },
+        modifier = modifier,
+        shape = RoundedCornerShape(6.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = color)
+    ) {
         Text("Sound", style = MaterialTheme.typography.titleLarge)
     }
 }
 
 @Composable
 fun PositionButton(vm: GameViewModel, modifier: Modifier) {
-    Button(onClick = { vm.checkMatch(GameType.Visual) }, modifier = modifier, shape = RoundedCornerShape(6.dp)) {
+    val color = when (vm.visualFeedback.collectAsState().value) {
+        GuessFeedback.None -> MaterialTheme.colorScheme.primary
+        GuessFeedback.Correct -> Color.hsv(120f, 1f, 0.6f)
+        GuessFeedback.Incorrect -> Color.hsv(0f, 1f, 0.6f)
+    }
+    Button(
+        onClick = { vm.checkMatch(GameType.Visual) },
+        modifier = modifier,
+        shape = RoundedCornerShape(6.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = color)
+    ) {
         Text("Position", style = MaterialTheme.typography.titleLarge)
     }
 }
@@ -243,7 +343,7 @@ fun PositionButton(vm: GameViewModel, modifier: Modifier) {
 @Composable
 fun GameScreenPreview() {
     val navController = rememberNavController()
-    Surface() {
+    Surface {
         GameScreen(vm = FakeVM(), onNavigateBack = { navController.navigate("home") })
     }
 }
