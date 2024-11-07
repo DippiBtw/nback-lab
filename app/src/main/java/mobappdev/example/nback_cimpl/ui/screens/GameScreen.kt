@@ -61,6 +61,8 @@ fun GameScreen(vm: GameViewModel, onNavigateBack: () -> Unit) {
 fun ScoreAndControls(
     score: Int, highScore: Int, vm: GameViewModel, onNavigateBack: () -> Unit,
 ) {
+    val round = vm.currentEventIndex.collectAsState().value + 1
+
     // Back Button
     BackButton(onNavigateBack = onNavigateBack, vm = vm)
 
@@ -74,6 +76,12 @@ fun ScoreAndControls(
         )
         Text(
             "Score: $score",
+            style = MaterialTheme.typography.titleLarge,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            "Round: $round",
             style = MaterialTheme.typography.titleLarge,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -99,14 +107,26 @@ fun BackButton(onNavigateBack: () -> Unit, vm: GameViewModel) {
 
 @Composable
 fun GameControlButtons(gameType: GameType, vm: GameViewModel, modifier: Modifier = Modifier) {
+    val configuration = LocalConfiguration.current
+    val smallestDimension = minOf(configuration.screenWidthDp.dp, configuration.screenHeightDp.dp)
+    val isPortrait = smallestDimension == configuration.screenWidthDp.dp
+
     when (gameType) {
         GameType.Audio -> AudioButton(vm, modifier)
         GameType.Visual -> PositionButton(vm, modifier)
         GameType.AudioVisual -> {
-            Row(modifier = modifier) {
-                PositionButton(vm, Modifier.weight(1f))
-                Spacer(modifier = Modifier.width(8.dp))
-                AudioButton(vm, Modifier.weight(1f))
+            if (isPortrait)
+                Row(modifier = modifier) {
+                    PositionButton(vm, Modifier.weight(1f).fillMaxHeight())
+                    Spacer(modifier = Modifier.width(8.dp))
+                    AudioButton(vm, Modifier.weight(1f).fillMaxHeight())
+                }
+            else {
+                Column(modifier = modifier) {
+                    PositionButton(vm, Modifier.weight(1f))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    AudioButton(vm, Modifier.weight(1f))
+                }
             }
         }
     }
@@ -314,7 +334,7 @@ fun AudioButton(vm: GameViewModel, modifier: Modifier) {
     }
     Button(
         onClick = { vm.checkMatch(GameType.Audio) },
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(6.dp),
         colors = ButtonDefaults.buttonColors(containerColor = color)
     ) {
@@ -331,7 +351,7 @@ fun PositionButton(vm: GameViewModel, modifier: Modifier) {
     }
     Button(
         onClick = { vm.checkMatch(GameType.Visual) },
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(6.dp),
         colors = ButtonDefaults.buttonColors(containerColor = color)
     ) {

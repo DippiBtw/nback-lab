@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import mobappdev.example.nback_cimpl.GameApplication
 import mobappdev.example.nback_cimpl.NBackHelper
 import mobappdev.example.nback_cimpl.data.UserPreferencesRepository
+import java.lang.Thread.State
 import kotlin.math.min
 
 /**
@@ -46,6 +47,7 @@ interface GameViewModel {
     val gridSize: StateFlow<Int>
     val eventInterval: StateFlow<Long>
     val numberOfEvents: StateFlow<Int>
+    val currentEventIndex: StateFlow<Int>
 
     val visualGuess: StateFlow<Boolean>
     val audioGuess: StateFlow<Boolean>
@@ -112,7 +114,10 @@ class GameVM(
 
     private var audioEvents = emptyArray<Int>()  // Array with all events
     private var visualEvents = emptyArray<Int>()  // Array with all events
-    private var currentEventIndex = -1
+
+    private val _currentEventIndex = MutableStateFlow(10)
+    override val currentEventIndex: StateFlow<Int>
+        get() = _currentEventIndex
 
     private val _visualGuess = MutableStateFlow(false)
     override val visualGuess: StateFlow<Boolean>
@@ -139,7 +144,7 @@ class GameVM(
 
     override fun startGame() {
         job?.cancel()  // Cancel any existing game loop
-        currentEventIndex = 0
+        _currentEventIndex.value = 0
         _score.value = 0
 
         viewModelScope.launch {
@@ -193,7 +198,7 @@ class GameVM(
 
     override fun endGame() {
         job?.cancel()
-        currentEventIndex = 0
+        _currentEventIndex.value = 0
         audioEvents = emptyArray<Int>()
         visualEvents = emptyArray<Int>()
         _visualState.value =
@@ -207,14 +212,14 @@ class GameVM(
     }
 
     override fun checkMatch(type: GameType) {
-        if (currentEventIndex >= nBack.value &&
-            currentEventIndex < if (type == GameType.Visual) visualEvents.size else audioEvents.size) {
+        if (_currentEventIndex.value >= nBack.value &&
+            _currentEventIndex.value < if (type == GameType.Visual) visualEvents.size else audioEvents.size) {
             val currentEvent =
-                if (type == GameType.Visual) visualEvents[currentEventIndex]
-                else audioEvents[currentEventIndex]
+                if (type == GameType.Visual) visualEvents[_currentEventIndex.value]
+                else audioEvents[_currentEventIndex.value]
             val previousEvent =
-                if (type == GameType.Visual) visualEvents[currentEventIndex - nBack.value]
-                else audioEvents[currentEventIndex - nBack.value]
+                if (type == GameType.Visual) visualEvents[_currentEventIndex.value - nBack.value]
+                else audioEvents[_currentEventIndex.value - nBack.value]
 
             if (currentEvent == previousEvent && if (type == GameType.Visual) !_visualGuess.value else !_audioGuess.value) {
                 // Add points for correct match
@@ -274,7 +279,7 @@ class GameVM(
             sayLetter()
 
             delay(eventInterval.value)
-            currentEventIndex++
+            _currentEventIndex.value++
 
         }
         endGame()
@@ -293,7 +298,7 @@ class GameVM(
             Log.d("EVENT", "" + _visualState.value.eventValue)
 
             delay(eventInterval.value)
-            currentEventIndex++
+            _currentEventIndex.value++
         }
         endGame()
     }
@@ -308,16 +313,16 @@ class GameVM(
             _audioGuess.value = false
 
             _audioState.value =
-                _audioState.value.copy(eventValue = audioEvents[currentEventIndex], index = _visualState.value.index + 1)
+                _audioState.value.copy(eventValue = audioEvents[_currentEventIndex.value], index = _visualState.value.index + 1)
             Log.d("EVENT", "" + _audioState.value.eventValue)
             sayLetter()
 
             _visualState.value =
-                _visualState.value.copy(eventValue = visualEvents[currentEventIndex], index = _visualState.value.index + 1)
+                _visualState.value.copy(eventValue = visualEvents[_currentEventIndex.value], index = _visualState.value.index + 1)
             Log.d("EVENT", "" + _visualState.value.eventValue)
 
             delay(eventInterval.value)
-            currentEventIndex++
+            _currentEventIndex.value++
         }
         endGame()
     }
@@ -455,6 +460,8 @@ class FakeVM : GameViewModel {
         get() = MutableStateFlow(2000L).asStateFlow()
     override val numberOfEvents: StateFlow<Int>
         get() = MutableStateFlow(10).asStateFlow()
+    override val currentEventIndex: StateFlow<Int>
+        get() = TODO("Not yet implemented")
     override val visualGuess: StateFlow<Boolean>
         get() = MutableStateFlow(false).asStateFlow()
     override val audioGuess: StateFlow<Boolean>

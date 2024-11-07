@@ -1,1 +1,1 @@
-/home/riff/repos/nback-lab/app/src/main/cpp/CMakeLists.txt
+C:\repos\nback-lab\app\src\main\cpp\CMakeLists.txt

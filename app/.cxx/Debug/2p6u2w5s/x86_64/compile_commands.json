@@ -1,12 +1,12 @@
 [
 {
-  "directory": "/home/riff/repos/nback-lab/app/.cxx/Debug/2p6u2w5s/x86_64",
-  "command": "/home/riff/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=x86_64-none-linux-android26 --sysroot=/home/riff/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/sysroot -Dnback_cimpl_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -o CMakeFiles/nback_cimpl.dir/nback.c.o -c /home/riff/repos/nback-lab/app/src/main/cpp/nback.c",
-  "file": "/home/riff/repos/nback-lab/app/src/main/cpp/nback.c"
+  "directory": "C:/repos/nback-lab/app/.cxx/Debug/2p6u2w5s/x86_64",
+  "command": "C:\\Users\\riffb\\AppData\\Local\\Android\\Sdk\\ndk\\27.0.12077973\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe --target=x86_64-none-linux-android26 --sysroot=C:/Users/riffb/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/sysroot -Dnback_cimpl_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -o CMakeFiles\\nback_cimpl.dir\\nback.c.o -c C:\\repos\\nback-lab\\app\\src\\main\\cpp\\nback.c",
+  "file": "C:\\repos\\nback-lab\\app\\src\\main\\cpp\\nback.c"
 },
 {
-  "directory": "/home/riff/repos/nback-lab/app/.cxx/Debug/2p6u2w5s/x86_64",
-  "command": "/home/riff/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --target=x86_64-none-linux-android26 --sysroot=/home/riff/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/sysroot -DJniBridge_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -o CMakeFiles/JniBridge.dir/JniBridge.c.o -c /home/riff/repos/nback-lab/app/src/main/cpp/JniBridge.c",
-  "file": "/home/riff/repos/nback-lab/app/src/main/cpp/JniBridge.c"
+  "directory": "C:/repos/nback-lab/app/.cxx/Debug/2p6u2w5s/x86_64",
+  "command": "C:\\Users\\riffb\\AppData\\Local\\Android\\Sdk\\ndk\\27.0.12077973\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe --target=x86_64-none-linux-android26 --sysroot=C:/Users/riffb/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/sysroot -DJniBridge_EXPORTS -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -o CMakeFiles\\JniBridge.dir\\JniBridge.c.o -c C:\\repos\\nback-lab\\app\\src\\main\\cpp\\JniBridge.c",
+  "file": "C:\\repos\\nback-lab\\app\\src\\main\\cpp\\JniBridge.c"
 }
 ]

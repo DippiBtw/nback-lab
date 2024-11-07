@@ -1,1 +1,1 @@
-/home/riff/repos/nback-lab/app/build/intermediates/cxx/Debug/2p6u2w5s/obj/x86
+C:\repos\nback-lab\app\build\intermediates\cxx\Debug\2p6u2w5s\obj\x86

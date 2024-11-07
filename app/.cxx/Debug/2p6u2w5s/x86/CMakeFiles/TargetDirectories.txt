@@ -1,4 +1,4 @@
-/home/riff/repos/nback-lab/app/.cxx/Debug/2p6u2w5s/x86/CMakeFiles/nback_cimpl.dir
-/home/riff/repos/nback-lab/app/.cxx/Debug/2p6u2w5s/x86/CMakeFiles/JniBridge.dir
-/home/riff/repos/nback-lab/app/.cxx/Debug/2p6u2w5s/x86/CMakeFiles/edit_cache.dir
-/home/riff/repos/nback-lab/app/.cxx/Debug/2p6u2w5s/x86/CMakeFiles/rebuild_cache.dir
+C:/repos/nback-lab/app/.cxx/Debug/2p6u2w5s/x86/CMakeFiles/nback_cimpl.dir
+C:/repos/nback-lab/app/.cxx/Debug/2p6u2w5s/x86/CMakeFiles/JniBridge.dir
+C:/repos/nback-lab/app/.cxx/Debug/2p6u2w5s/x86/CMakeFiles/edit_cache.dir
+C:/repos/nback-lab/app/.cxx/Debug/2p6u2w5s/x86/CMakeFiles/rebuild_cache.dir
