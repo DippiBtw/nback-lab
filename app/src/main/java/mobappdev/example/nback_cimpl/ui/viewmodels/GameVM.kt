@@ -150,7 +150,7 @@ class GameVM(
             visualEvents = nBackHelper.generateNBackString(
                 numberOfEvents.value,
                 gridSize.value * gridSize.value,
-               35,
+                35,
                 nBack.value
             ).toList()
                 .toTypedArray()
@@ -180,6 +180,9 @@ class GameVM(
                 GameType.Visual -> runVisualGame()
             }
 
+            _visualState.value.finished = true
+            _audioState.value.finished = true
+
             endGame()
             saveHighscore()
         }
@@ -197,16 +200,14 @@ class GameVM(
         _audioState.value =
             _audioState.value.copy(eventValue = -1, index = 0)
 
-        _visualState.value.finished = true
-        _audioState.value.finished = true
-
         _visualFeedback.value = GuessFeedback.None
         _audioFeedback.value = GuessFeedback.None
     }
 
     override fun checkMatch(type: GameType) {
         if (_currentEventIndex.value >= nBack.value &&
-            _currentEventIndex.value < if (type == GameType.Visual) visualEvents.size else audioEvents.size) {
+            _currentEventIndex.value < if (type == GameType.Visual) visualEvents.size else audioEvents.size
+        ) {
 
             // Get relevant events
             val currentEvent =
@@ -303,12 +304,18 @@ class GameVM(
             _audioGuess.value = false
 
             _audioState.value =
-                _audioState.value.copy(eventValue = audioEvents[_currentEventIndex.value], index = _visualState.value.index + 1)
+                _audioState.value.copy(
+                    eventValue = audioEvents[_currentEventIndex.value],
+                    index = _visualState.value.index + 1
+                )
             Log.d("EVENT", "" + _audioState.value.eventValue)
             sayLetter()
 
             _visualState.value =
-                _visualState.value.copy(eventValue = visualEvents[_currentEventIndex.value], index = _visualState.value.index + 1)
+                _visualState.value.copy(
+                    eventValue = visualEvents[_currentEventIndex.value],
+                    index = _visualState.value.index + 1
+                )
             Log.d("EVENT", "" + _visualState.value.eventValue)
 
             delay(eventInterval.value)
